@@ -14,7 +14,9 @@ A Black Badge–level CTF combining Reverse Engineering, Scripting, and Logic ex
 | 2 | Siphon $1,000 via rounding exploits | Python scripting, number theory, side-channel |
 | 3 | Submit 5 tokens to The Broker | OSINT/logic, rate-limit awareness |
 
-**Flag:** `CTF{0n3_C3nt_5_B4nk5_0n3_M45t3rm1nd_92}`
+**Flag format:** `ronin{...}` — but the Broker delivers it **AES-128-CBC encrypted**. Players must decrypt the ciphertext to read the flag.
+
+> *"I don't hand out plaintext. That's not how this business works."*
 
 ---
 
@@ -109,9 +111,31 @@ Host `binaries/compiled/auth_node_[1-5].elf` on your challenge server for player
 - **Exploit:** Banker's Rounding — `0.005` rounds to `0.00` but ledger posts `$0.01`
 
 ### The Broker `:9999`
-- Submit all 5 tokens to receive the flag
+- Submit all 5 tokens to receive the **encrypted flag**
 - **3 wrong token attempts = session locked + all sessions invalidated + passwords rotate**
 - Players must re-authenticate all 5 banks from scratch
+- The Broker delivers `AES-128-CBC` ciphertext — players must derive the **16-char key** from clues scattered across the 5 banks
+
+#### Flag Encryption
+```
+Algorithm  : AES-128-CBC
+Key        : OneCentThiefKey!   (assembled from per-bank key fragments)
+IV         : SalamiSliceIV!!!   (hinted by the challenge theme)
+Plaintext  : ronin{0n3_C3nt_5_B4nk5_0n3_M45t3rm1nd_92}
+Ciphertext : 8TeTSXbc7AAYIOkU+fAWIB+iG4tJ4Q2xKrEe3zFBYPljupi9DPPj13N8mP+8wqhz
+```
+
+Decrypt snippet:
+```python
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import unpad
+import base64
+key = b'OneCentThiefKey!'
+iv  = base64.b64decode('U2FsYW1pU2xpY2VJViEhIQ==')
+ct  = base64.b64decode('8TeTSXbc7AAYIOkU+fAWIB+iG4tJ4Q2xKrEe3zFBYPljupi9DPPj13N8mP+8wqhz')
+print(unpad(AES.new(key, AES.MODE_CBC, iv).decrypt(ct), 16).decode())
+# ronin{0n3_C3nt_5_B4nk5_0n3_M45t3rm1nd_92}
+```
 
 ---
 

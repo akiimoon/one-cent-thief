@@ -17,7 +17,21 @@ from database import (
 )
 
 PORT = 9999
-FLAG = "CTF{0n3_C3nt_5_B4nk5_0n3_M45t3rm1nd_92}"
+
+# ── Encrypted flag ───────────────────────────────────────────────────────────
+# The plaintext flag is: ronin{0n3_C3nt_5_B4nk5_0n3_M45t3rm1nd_92}
+# Encrypted with AES-128-CBC. Players must decrypt it to claim the flag.
+#
+# Algorithm : AES-128-CBC
+# Key       : OneCentThiefKey!   (16 bytes — hidden across the 5 bank binaries)
+# IV        : SalamiSliceIV!!!   (16 bytes — hinted by the challenge theme)
+# Ciphertext: base64-encoded below
+#
+# Key hint: each bank binary leaks one segment of the key when solved:
+#   Bank1 → "OneC"   Bank2 → "entT"   Bank3 → "hief"   Bank4 → "Key!"  (IV from Bank5)
+ENCRYPTED_FLAG = "8TeTSXbc7AAYIOkU+fAWIB+iG4tJ4Q2xKrEe3zFBYPljupi9DPPj13N8mP+8wqhz"
+ENCRYPTED_IV   = "U2FsYW1pU2xpY2VJViEhIQ=="  # base64("SalamiSliceIV!!!")
+# ─────────────────────────────────────────────────────────────────────────────
 
 BANNER = r"""
 ╔══════════════════════════════════════════════════════════════════╗
@@ -140,14 +154,40 @@ def handle_client(conn, addr):
 
                 # Check for all 5
                 if broker_all_five_collected(bsid):
-                    send(conn, "\n" + "═" * 60)
+                    send(conn, "\n" + "═" * 66)
                     send(conn, "  [!!!] ALL FIVE TOKENS VERIFIED. THE HEIST IS COMPLETE.")
-                    send(conn, "═" * 60)
-                    send(conn, "\n  The Broker leans back, counts the cuts, and smiles.")
-                    send(conn, "  'Five banks. One masterpiece. Here is your reward,")
-                    send(conn, "   Accountant.'\n")
-                    send(conn, f"  FLAG: {FLAG}\n")
-                    send(conn, "═" * 60)
+                    send(conn, "═" * 66)
+                    send(conn, "")
+                    send(conn, "  The Broker leans back, lights a cigarette, and slides")
+                    send(conn, "  an envelope across the table.")
+                    send(conn, "")
+                    send(conn, "  'You earned it, Accountant. But I don't hand out")
+                    send(conn, "   plaintext. That's not how this business works.'")
+                    send(conn, "")
+                    send(conn, "  'Decrypt this first.'")
+                    send(conn, "")
+                    send(conn, "─" * 66)
+                    send(conn, "  [ENCRYPTED REWARD]")
+                    send(conn, "")
+                    send(conn, f"  Algorithm  : AES-128-CBC")
+                    send(conn, f"  IV (base64): {ENCRYPTED_IV}")
+                    send(conn, f"  Ciphertext : {ENCRYPTED_FLAG}")
+                    send(conn, "")
+                    send(conn, "  Hint: The key is 16 characters. You've seen fragments")
+                    send(conn, "  of it across all five banks. Assemble the pieces.")
+                    send(conn, "─" * 66)
+                    send(conn, "")
+                    send(conn, "  python3 -c \"")
+                    send(conn, "    from Crypto.Cipher import AES")
+                    send(conn, "    from Crypto.Util.Padding import unpad")
+                    send(conn, "    import base64")
+                    send(conn, "    key = b'????????????????'  # 16-char key")
+                    send(conn, f"    iv  = base64.b64decode('{ENCRYPTED_IV}')")
+                    send(conn, f"    ct  = base64.b64decode('{ENCRYPTED_FLAG}')")
+                    send(conn, "    print(unpad(AES.new(key,AES.MODE_CBC,iv).decrypt(ct),16))")
+                    send(conn, "  \"")
+                    send(conn, "")
+                    send(conn, "═" * 66)
                     conn.close()
                     return
             else:
