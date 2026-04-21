@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+/data/
+/binaries/compiled/*.elf
+tokens.txt
+*.db
+*.db-shm
+*.db-wal
+.DS_Store

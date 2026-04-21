@@ -1,0 +1,18 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Copy shared backend
+COPY backend/ /app/backend/
+
+# Copy bank server (set via build arg)
+ARG BANK_NUM
+COPY banks/bank${BANK_NUM}_*/server.py /app/server.py
+
+# Shared data volume for SQLite
+RUN mkdir -p /data
+
+ENV DB_PATH=/data/ctf.db
+ENV PYTHONUNBUFFERED=1
+
+CMD ["python3", "-u", "/app/server.py"]

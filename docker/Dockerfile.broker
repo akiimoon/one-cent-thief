@@ -1,0 +1,13 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY backend/ /app/backend/
+COPY broker/server.py /app/server.py
+
+RUN mkdir -p /data
+
+ENV DB_PATH=/data/ctf.db
+ENV PYTHONUNBUFFERED=1
+
+CMD ["python3", "-u", "/app/server.py"]

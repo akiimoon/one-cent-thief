@@ -1,0 +1,132 @@
+version: "3.9"
+
+# ─────────────────────────────────────────────────────────────────
+#  CTF: One Cent Thief — Docker Compose
+#  All services share a single SQLite database via a named volume.
+# ─────────────────────────────────────────────────────────────────
+
+volumes:
+  ctf_data:   # Shared SQLite database
+
+networks:
+  ctf_net:
+    driver: bridge
+
+services:
+
+  # ── Bank 1: Ironclad National (XOR password) ──────────────────
+  bank1:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.bank
+      args:
+        BANK_NUM: "1"
+    container_name: ctf_bank1_ironclad
+    ports:
+      - "9001:9001"
+    volumes:
+      - ctf_data:/data
+    networks:
+      - ctf_net
+    restart: unless-stopped
+    environment:
+      - DB_PATH=/data/ctf.db
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import socket; s=socket.socket(); s.connect(('localhost',9001)); s.close()"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ── Bank 2: Sakura Financial (time-based HMAC) ─────────────────
+  bank2:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.bank
+      args:
+        BANK_NUM: "2"
+    container_name: ctf_bank2_sakura
+    ports:
+      - "9002:9002"
+    volumes:
+      - ctf_data:/data
+    networks:
+      - ctf_net
+    restart: unless-stopped
+    environment:
+      - DB_PATH=/data/ctf.db
+
+  # ── Bank 3: Swiss Vault AG (anti-debug, .rsrc section) ─────────
+  bank3:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.bank
+      args:
+        BANK_NUM: "3"
+    container_name: ctf_bank3_swiss
+    ports:
+      - "9003:9003"
+    volumes:
+      - ctf_data:/data
+    networks:
+      - ctf_net
+    restart: unless-stopped
+    environment:
+      - DB_PATH=/data/ctf.db
+
+  # ── Bank 4: Desert Gold Exchange (custom VM) ───────────────────
+  bank4:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.bank
+      args:
+        BANK_NUM: "4"
+    container_name: ctf_bank4_desert
+    ports:
+      - "9004:9004"
+    volumes:
+      - ctf_data:/data
+    networks:
+      - ctf_net
+    restart: unless-stopped
+    environment:
+      - DB_PATH=/data/ctf.db
+
+  # ── Bank 5: Nero Digital (PoW + Banker's Rounding) ─────────────
+  bank5:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.bank
+      args:
+        BANK_NUM: "5"
+    container_name: ctf_bank5_nero
+    ports:
+      - "9005:9005"
+    volumes:
+      - ctf_data:/data
+    networks:
+      - ctf_net
+    restart: unless-stopped
+    environment:
+      - DB_PATH=/data/ctf.db
+
+  # ── The Broker (final flag exchange) ──────────────────────────
+  broker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.broker
+    container_name: ctf_broker
+    ports:
+      - "9999:9999"
+    volumes:
+      - ctf_data:/data
+    networks:
+      - ctf_net
+    restart: unless-stopped
+    environment:
+      - DB_PATH=/data/ctf.db
+    depends_on:
+      - bank1
+      - bank2
+      - bank3
+      - bank4
+      - bank5
